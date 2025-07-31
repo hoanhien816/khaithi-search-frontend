@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRỢ LÝ TÌM KHAI THỊ</title>
+
+    <!-- PWA: Link to Manifest File -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- PWA: Theme Color for Address Bar -->
+    <meta name="theme-color" content="#f5f3f0">
+
+    <!-- Google Font: Noto Serif for a more traditional feel -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Tải Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Các kiểu tùy chỉnh theo phong cách Phật giáo */
+        body {
+            font-family: 'Noto Serif', serif; /* Font chữ trang trọng, cổ điển */
+            background-color: #f5f3f0; /* Màu nền kem hơi ngả xám, tạo cảm giác tĩnh lặng */
+            color: #4a4a4a; /* Màu chữ xám đậm, dễ đọc */
+        }
+        .container {
+            max-width: 800px;
+            background-color: #ffffff; /* Nền trắng tinh khôi cho nội dung chính */
+            border: 1px solid #e0dccc; /* Viền mỏng nhẹ nhàng */
+        }
+        .header {
+            color: #6b4f3a; /* Màu nâu đất cho tiêu đề */
+            border-bottom: 2px solid #c8b5a6; /* Đường viền dưới màu nâu nhạt */
+        }
+        .header img {
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); /* Đổ bóng nhẹ cho logo */
+        }
+        .search-input {
+            border-color: #c8b5a6; /* Viền màu nâu nhạt */
+            text-align: center;
+        }
+        .search-input::placeholder {
+            text-align: center;
+        }
+        .search-input:focus {
+            border-color: #a08c7d; /* Màu viền đậm hơn khi focus */
+            box-shadow: 0 0 0 2px rgba(160, 140, 125, 0.2); /* Hiệu ứng focus tinh tế */
+        }
+        .article-list li {
+            background-color: #faf8f5; /* Nền màu kem rất nhạt cho mỗi mục */
+            border-left: 4px solid #b59a84; /* Viền trái màu vàng đồng */
+        }
+        .article-list li a {
+            color: #6b4f3a; /* Màu chữ nâu đất */
+            transition: color 0.2s ease-in-out;
+        }
+        .article-list li a:hover {
+            color: #4a3728; /* Màu nâu đậm hơn khi di chuột */
+        }
+        .lotus-icon {
+            color: #b59a84; /* Màu hoa sen đồng bộ với viền */
+            font-size: 1.25rem;
+            line-height: 1;
+        }
+        /* Hiệu ứng quay cho biểu tượng tải */
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #b59a84; /* Màu nâu đồng */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Kiểu cho từ khóa được tô sáng */
+        .highlight {
+            color: #a16207; /* Màu cam đậm */
+            background-color: #fef3c7; /* Nền vàng nhạt */
+            padding: 1px 3px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="container mx-auto rounded-lg shadow-lg p-6 md:p-8">
+        <!-- Phần Tiêu Đề -->
+        <header class="header text-center py-6 mb-8 flex flex-col items-center">
+            <!-- Logo -->
+            <img src="logo.png" alt="Logo" class="h-24 w-24 mb-4 object-contain" onerror="this.style.display='none'">
+            <h1 class="text-3xl md:text-5xl font-bold">TRỢ LÝ TÌM KHAI THỊ</h1>
+            <p class="mt-2 text-lg italic max-w-2xl">
+                Mình là Trợ Lý trợ giúp tìm kiếm Khai Thị Trên Website : https://timkhaithi.pmtl.site
+            </p>
+        </header>
+
+        <!-- Phần Tìm Kiếm -->
+        <div class="mb-6">
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Tìm kiếm trí tuệ..."
+                class="search-input w-full p-3 rounded-lg border-2 focus:outline-none text-lg transition-all"
+            />
+        </div>
+
+        <!-- Chỉ Báo Đang Tải -->
+        <div id="loadingIndicator" class="flex justify-center items-center py-8 hidden">
+            <div class="loading-spinner"></div>
+            <p class="ml-3 text-gray-600">Đang tìm kiếm trí tuệ...</p>
+        </div>
+
+        <!-- Danh Sách Bài Viết -->
+        <div id="articleListContainer">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700 border-b pb-2">BÀI VIẾT GỢI Ý</h2>
+            <ul id="articles" class="space-y-3">
+                <!-- Các bài viết sẽ được tải và hiển thị tại đây bằng JavaScript -->
+            </ul>
+            <p id="noResults" class="text-center text-gray-500 py-8 hidden">Không tìm thấy bài viết nào phù hợp. Vui lòng thử từ khóa khác.</p>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        const articlesUl = document.getElementById('articles');
+        const searchInput = document.getElementById('searchInput');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const noResultsMessage = document.getElementById('noResults');
+
+        // --- Cấu hình API Backend ---
+        // QUAN TRỌNG: Thay thế URL này bằng URL công khai của Flask API trên Render của bạn
+        // Ví dụ: "https://khaithi-api.onrender.com"
+        const API_BASE_URL = "http://localhost:5000"; 
+
+        /**
+         * @function fetchArticlesFromAPI
+         * @description Gửi yêu cầu tìm kiếm đến API backend.
+         * @param {string} searchTerm - Từ khóa tìm kiếm.
+         */
+        async function fetchArticlesFromAPI(searchTerm) {
+            loadingIndicator.classList.remove('hidden');
+            articlesUl.innerHTML = ''; // Xóa kết quả cũ
+            noResultsMessage.classList.add('hidden'); // Ẩn thông báo không có kết quả
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/search?q=${encodeURIComponent(searchTerm)}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const articles = await response.json();
+                renderArticles(articles, searchTerm); // Render kết quả từ API
+            } catch (error) {
+                console.error("Lỗi khi gọi API tìm kiếm:", error);
+                noResultsMessage.textContent = "Đã xảy ra lỗi khi tìm kiếm. Vui lòng thử lại sau.";
+                noResultsMessage.classList.remove('hidden');
+            } finally {
+                loadingIndicator.classList.add('hidden');
+            }
+        }
+
+        /**
+         * @function escapeRegExp
+         * @description Escapes special characters in a string for use in a regular expression.
+         * @param {string} string - The string to escape.
+         * @returns {string} The escaped string.
+         */
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        /**
+         * @function renderArticles
+         * @description Displays the list of articles on the user interface, with keyword highlighting.
+         * @param {Array<Object>} articlesToDisplay - The array of article objects to display.
+         * @param {string} [searchTerm=''] - The current search term for highlighting.
+         */
+        function renderArticles(articlesToDisplay, searchTerm = '') {
+            articlesUl.innerHTML = '';
+            noResultsMessage.classList.toggle('hidden', articlesToDisplay.length > 0);
+
+            const highlightWords = searchTerm.split(/\s+/).filter(Boolean).map(word => escapeRegExp(word));
+            let highlightRegex = null;
+            if (highlightWords.length > 0) {
+                highlightRegex = new RegExp(`(${highlightWords.join('|')}|${escapeRegExp(searchTerm)})`, 'gi');
+            }
+
+            articlesToDisplay.forEach(article => {
+                const listItem = document.createElement('li');
+                listItem.className = 'article-list li p-4 rounded-lg shadow-sm flex items-center space-x-4 hover:shadow-md transition-shadow duration-200 ease-in-out';
+                
+                const iconSpan = document.createElement('span');
+                iconSpan.className = 'lotus-icon';
+                iconSpan.innerHTML = '🪷';
+
+                const link = document.createElement('a');
+                link.href = article.url;
+                link.target = '_blank';
+                link.className = 'text-lg font-medium block w-full';
+
+                let highlightedTitle = article.title;
+                if (highlightRegex) {
+                    highlightedTitle = highlightedTitle.replace(highlightRegex, (match) => {
+                        if (match.includes('<span class="highlight">') || match.includes('</span>')) {
+                            return match;
+                        }
+                        return `<span class="highlight">${match}</span>`;
+                    });
+                }
+                link.innerHTML = highlightedTitle;
+
+                // --- HIỂN THỊ ĐOẠN TRÍCH NỘI DUNG VÀ TÔ SÁNG TỪ API ---
+                if (article.content_snippet) { // content_snippet được trả về từ API
+                    const contentSnippet = document.createElement('p');
+                    contentSnippet.className = 'text-sm text-gray-600 mt-1';
+                    contentSnippet.innerHTML = article.content_snippet; // API đã xử lý highlight
+                    link.appendChild(contentSnippet);
+                }
+
+                listItem.appendChild(iconSpan);
+                listItem.appendChild(link);
+                articlesUl.appendChild(listItem);
+            });
+        }
+
+        /**
+         * @function handleSearchInput
+         * @description Xử lý sự kiện nhập liệu vào ô tìm kiếm.
+         */
+        function handleSearchInput() {
+            const searchTerm = searchInput.value.trim();
+            // Chỉ gọi API khi có từ khóa tìm kiếm
+            if (searchTerm.length > 0) {
+                fetchArticlesFromAPI(searchTerm);
+            } else {
+                // Nếu không có từ khóa, có thể hiển thị một số bài viết gợi ý mặc định
+                // Hoặc xóa danh sách kết quả
+                articlesUl.innerHTML = '';
+                noResultsMessage.classList.add('hidden');
+                // Bạn có thể thêm logic để tải các bài viết phổ biến/mới nhất tại đây nếu muốn
+                // Ví dụ: fetchArticlesFromAPI(""); // Một endpoint API riêng cho bài gợi ý
+            }
+        }
+
+        // Event listener cho sự kiện nhập liệu vào ô tìm kiếm
+        searchInput.addEventListener('input', handleSearchInput);
+
+        // Khi DOM được tải, không cần tải toàn bộ bài viết nữa, chỉ hiển thị gợi ý ban đầu
+        document.addEventListener('DOMContentLoaded', () => {
+            // Có thể hiển thị một số bài viết phổ biến/mới nhất ban đầu nếu API hỗ trợ
+            // Ví dụ: fetchArticlesFromAPI(""); // Gọi API không có từ khóa để lấy bài gợi ý
+            // Hoặc chỉ để trống và chờ người dùng nhập
+        });
+    </script>
+
+    <!-- PWA: Register Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => console.log('Service Worker đã đăng ký thành công:', registration))
+                    .catch(error => console.log('Đăng ký Service Worker thất bại:', error));
+            });
+        }
+    </script>
+</body>
+</html>
