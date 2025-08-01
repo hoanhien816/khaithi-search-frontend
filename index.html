@@ -116,13 +116,14 @@
         </div>
 
         <!-- Danh Sách Bài Viết -->
-        <div id="articleListContainer">
+        <div id="articleListContainer" class="hidden">
             <h2 class="text-2xl font-semibold mb-4 text-gray-700 border-b pb-2">BÀI VIẾT GỢI Ý</h2>
             <ul id="articles" class="space-y-3">
                 <!-- Các bài viết sẽ được tải và hiển thị tại đây bằng JavaScript -->
             </ul>
-            <p id="noResults" class="text-center text-gray-500 py-8 hidden">Không tìm thấy bài viết nào phù hợp. Vui lòng thử từ khóa khác.</p>
         </div>
+        <!-- Thông báo không có kết quả -->
+        <p id="noResults" class="text-center text-gray-500 py-8 hidden">Không tìm thấy bài viết nào phù hợp. Vui lòng thử từ khóa khác.</p>
     </div>
 
     <script type="text/javascript">
@@ -130,11 +131,14 @@
         const searchInput = document.getElementById('searchInput');
         const loadingIndicator = document.getElementById('loadingIndicator');
         const noResultsMessage = document.getElementById('noResults');
+        const articleListContainer = document.getElementById('articleListContainer');
+        const listTitle = articleListContainer.querySelector('h2');
 
         // --- Cấu hình API Backend ---
-        // QUAN TRỌNG: Thay thế URL này bằng URL công khai của Flask API trên Render của bạn
-        // Ví dụ: "https://khaithi-api.onrender.com"
         const API_BASE_URL = "https://khaithi-search-backend.onrender.com"; 
+
+        // --- TỐI ƯU HÓA: Biến để lưu trữ bộ đếm thời gian debounce ---
+        let debounceTimer;
 
         /**
          * @function fetchArticlesFromAPI
@@ -143,30 +147,31 @@
          */
         async function fetchArticlesFromAPI(searchTerm) {
             loadingIndicator.classList.remove('hidden');
-            articlesUl.innerHTML = ''; // Xóa kết quả cũ
-            noResultsMessage.classList.add('hidden'); // Ẩn thông báo không có kết quả
+            articleListContainer.classList.add('hidden'); // Ẩn danh sách kết quả cũ
+            noResultsMessage.classList.add('hidden'); // Ẩn thông báo cũ
 
             try {
+                // Gọi API tìm kiếm. Nếu searchTerm rỗng, backend nên hiểu là trả về bài gợi ý.
                 const response = await fetch(`${API_BASE_URL}/api/search?q=${encodeURIComponent(searchTerm)}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const articles = await response.json();
-                renderArticles(articles, searchTerm); // Render kết quả từ API
+                renderArticles(articles, searchTerm); 
             } catch (error) {
                 console.error("Lỗi khi gọi API tìm kiếm:", error);
                 noResultsMessage.textContent = "Đã xảy ra lỗi khi tìm kiếm. Vui lòng thử lại sau.";
-                noResultsMessage.classList.remove('hidden');
+                noResultsMessage.classList.remove('hidden'); // Hiển thị lỗi
             } finally {
-                loadingIndicator.classList.add('hidden');
+                loadingIndicator.classList.add('hidden'); // Luôn ẩn loading khi hoàn tất
             }
         }
 
         /**
          * @function escapeRegExp
-         * @description Escapes special characters in a string for use in a regular expression.
-         * @param {string} string - The string to escape.
-         * @returns {string} The escaped string.
+         * @description Thoát các ký tự đặc biệt trong chuỗi để dùng trong biểu thức chính quy (RegExp).
+         * @param {string} string - Chuỗi cần xử lý.
+         * @returns {string} Chuỗi đã được xử lý.
          */
         function escapeRegExp(string) {
             return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -174,23 +179,41 @@
 
         /**
          * @function renderArticles
-         * @description Displays the list of articles on the user interface, with keyword highlighting.
-         * @param {Array<Object>} articlesToDisplay - The array of article objects to display.
-         * @param {string} [searchTerm=''] - The current search term for highlighting.
+         * @description Hiển thị danh sách bài viết lên giao diện, có tô sáng từ khóa.
+         * @param {Array<Object>} articlesToDisplay - Mảng các đối tượng bài viết cần hiển thị.
+         * @param {string} [searchTerm=''] - Từ khóa tìm kiếm hiện tại để tô sáng.
          */
         function renderArticles(articlesToDisplay, searchTerm = '') {
-            articlesUl.innerHTML = '';
-            noResultsMessage.classList.toggle('hidden', articlesToDisplay.length > 0);
+            articlesUl.innerHTML = ''; // Xóa sạch danh sách cũ
+            
+            const hasResults = articlesToDisplay.length > 0;
 
+            // TỐI ƯU HÓA: Quản lý hiển thị các thành phần
+            articleListContainer.classList.toggle('hidden', !hasResults);
+            noResultsMessage.classList.toggle('hidden', hasResults);
+
+            if (!hasResults && searchTerm) {
+                 noResultsMessage.textContent = "Không tìm thấy bài viết nào phù hợp. Vui lòng thử từ khóa khác.";
+            }
+
+            // Đổi tiêu đề dựa trên việc có tìm kiếm hay không
+            if (searchTerm) {
+                listTitle.textContent = 'KẾT QUẢ TÌM KIẾM';
+            } else {
+                listTitle.textContent = 'BÀI VIẾT GỢI Ý';
+            }
+
+            // TỐI ƯU HÓA: Cải thiện logic tô sáng
             const highlightWords = searchTerm.split(/\s+/).filter(Boolean).map(word => escapeRegExp(word));
             let highlightRegex = null;
             if (highlightWords.length > 0) {
-                highlightRegex = new RegExp(`(${highlightWords.join('|')}|${escapeRegExp(searchTerm)})`, 'gi');
+                // Tạo regex để tìm bất kỳ từ nào trong các từ khóa
+                highlightRegex = new RegExp(`(${highlightWords.join('|')})`, 'gi');
             }
 
             articlesToDisplay.forEach(article => {
                 const listItem = document.createElement('li');
-                listItem.className = 'article-list li p-4 rounded-lg shadow-sm flex items-center space-x-4 hover:shadow-md transition-shadow duration-200 ease-in-out';
+                listItem.className = 'p-4 rounded-lg shadow-sm flex items-center space-x-4 hover:shadow-md transition-shadow duration-200 ease-in-out article-list';
                 
                 const iconSpan = document.createElement('span');
                 iconSpan.className = 'lotus-icon';
@@ -201,22 +224,19 @@
                 link.target = '_blank';
                 link.className = 'text-lg font-medium block w-full';
 
+                // Tô sáng tiêu đề
                 let highlightedTitle = article.title;
                 if (highlightRegex) {
-                    highlightedTitle = highlightedTitle.replace(highlightRegex, (match) => {
-                        if (match.includes('<span class="highlight">') || match.includes('</span>')) {
-                            return match;
-                        }
-                        return `<span class="highlight">${match}</span>`;
-                    });
+                    highlightedTitle = highlightedTitle.replace(highlightRegex, `<span class="highlight">$1</span>`);
                 }
                 link.innerHTML = highlightedTitle;
 
-                // --- HIỂN THỊ ĐOẠN TRÍCH NỘI DUNG VÀ TÔ SÁNG TỪ API ---
-                if (article.content_snippet) { // content_snippet được trả về từ API
+                // Hiển thị đoạn trích nội dung đã được tô sáng từ API
+                if (article.content_snippet) { 
                     const contentSnippet = document.createElement('p');
                     contentSnippet.className = 'text-sm text-gray-600 mt-1';
-                    contentSnippet.innerHTML = article.content_snippet; // API đã xử lý highlight
+                    // API đã xử lý highlight, chỉ cần hiển thị
+                    contentSnippet.innerHTML = `...${article.content_snippet}...`; 
                     link.appendChild(contentSnippet);
                 }
 
@@ -228,31 +248,26 @@
 
         /**
          * @function handleSearchInput
-         * @description Xử lý sự kiện nhập liệu vào ô tìm kiếm.
+         * @description Xử lý sự kiện nhập liệu vào ô tìm kiếm với kỹ thuật debounce.
          */
         function handleSearchInput() {
+            clearTimeout(debounceTimer); // Xóa bộ đếm thời gian cũ
             const searchTerm = searchInput.value.trim();
-            // Chỉ gọi API khi có từ khóa tìm kiếm
-            if (searchTerm.length > 0) {
+            
+            // TỐI ƯU HÓA: Chỉ gọi API sau khi người dùng ngừng gõ 300ms
+            debounceTimer = setTimeout(() => {
+                // Nếu có từ khóa hoặc ô tìm kiếm trống (để tải lại gợi ý), thì gọi API
                 fetchArticlesFromAPI(searchTerm);
-            } else {
-                // Nếu không có từ khóa, có thể hiển thị một số bài viết gợi ý mặc định
-                // Hoặc xóa danh sách kết quả
-                articlesUl.innerHTML = '';
-                noResultsMessage.classList.add('hidden');
-                // Bạn có thể thêm logic để tải các bài viết phổ biến/mới nhất tại đây nếu muốn
-                // Ví dụ: fetchArticlesFromAPI(""); // Một endpoint API riêng cho bài gợi ý
-            }
+            }, 300); 
         }
 
         // Event listener cho sự kiện nhập liệu vào ô tìm kiếm
         searchInput.addEventListener('input', handleSearchInput);
 
-        // Khi DOM được tải, không cần tải toàn bộ bài viết nữa, chỉ hiển thị gợi ý ban đầu
+        // TỐI ƯU HÓA: Khi DOM được tải, tự động tải các bài viết gợi ý
         document.addEventListener('DOMContentLoaded', () => {
-            // Có thể hiển thị một số bài viết phổ biến/mới nhất ban đầu nếu API hỗ trợ
-            // Ví dụ: fetchArticlesFromAPI(""); // Gọi API không có từ khóa để lấy bài gợi ý
-            // Hoặc chỉ để trống và chờ người dùng nhập
+            // Gọi API với chuỗi rỗng để backend hiểu là cần lấy bài viết gợi ý
+            fetchArticlesFromAPI(''); 
         });
     </script>
 
