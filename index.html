@@ -231,12 +231,21 @@
                 }
                 link.innerHTML = highlightedTitle;
 
-                // Hiển thị đoạn trích nội dung đã được tô sáng từ API
+                // --- CẬP NHẬT QUAN TRỌNG ---
+                // Hiển thị đoạn trích nội dung và TỰ TÔ SÁNG TỪ KHÓA trên frontend.
+                // Để hiển thị nhiều nội dung hơn, bạn cần đảm bảo API trả về nhiều text hơn trong trường 'content_snippet'.
                 if (article.content_snippet) { 
                     const contentSnippet = document.createElement('p');
                     contentSnippet.className = 'text-sm text-gray-600 mt-1';
-                    // API đã xử lý highlight, chỉ cần hiển thị
-                    contentSnippet.innerHTML = `...${article.content_snippet}...`; 
+                    
+                    let highlightedContent = article.content_snippet;
+                    // Áp dụng tô sáng cho nội dung nếu có từ khóa tìm kiếm
+                    if (highlightRegex) {
+                        highlightedContent = highlightedContent.replace(highlightRegex, `<span class="highlight">$1</span>`);
+                    }
+                    
+                    // Hiển thị nội dung đã được tô sáng
+                    contentSnippet.innerHTML = `...${highlightedContent}...`; 
                     link.appendChild(contentSnippet);
                 }
 
