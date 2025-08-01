@@ -203,26 +203,37 @@
                 listTitle.textContent = 'BÀI VIẾT GỢI Ý';
             }
 
-            // TỐI ƯU HÓA: Cải thiện logic tô sáng
+            // TỐI ƯU HÓA: Cải thiện logic tô sáng để ưu tiên cả cụm từ và từ đơn lẻ
             const highlightWords = searchTerm.split(/\s+/).filter(Boolean).map(word => escapeRegExp(word));
-            let highlightRegex = null;
+            const regexParts = [];
+            if (searchTerm) {
+                regexParts.push(escapeRegExp(searchTerm)); // Ưu tiên tìm cả cụm từ
+            }
             if (highlightWords.length > 0) {
-                // Tạo regex để tìm bất kỳ từ nào trong các từ khóa
-                highlightRegex = new RegExp(`(${highlightWords.join('|')})`, 'gi');
+                regexParts.push(...highlightWords);
+            }
+            const uniqueRegexParts = [...new Set(regexParts)]; // Bỏ các phần tử trùng lặp
+
+            let highlightRegex = null;
+            if (uniqueRegexParts.length > 0) {
+                highlightRegex = new RegExp(`(${uniqueRegexParts.join('|')})`, 'gi');
             }
 
             articlesToDisplay.forEach(article => {
                 const listItem = document.createElement('li');
-                listItem.className = 'p-4 rounded-lg shadow-sm flex items-center space-x-4 hover:shadow-md transition-shadow duration-200 ease-in-out article-list';
+                listItem.className = 'p-4 rounded-lg shadow-sm flex items-start space-x-4 hover:shadow-md transition-shadow duration-200 ease-in-out article-list';
                 
                 const iconSpan = document.createElement('span');
-                iconSpan.className = 'lotus-icon';
-                iconSpan.innerHTML = '🪷';
+                iconSpan.className = 'lotus-icon mt-1'; // Thêm mt-1 để căn chỉnh icon
+                iconSpan.innerHTML = '�';
+
+                const linkContainer = document.createElement('div');
+                linkContainer.className = 'w-full';
 
                 const link = document.createElement('a');
                 link.href = article.url;
                 link.target = '_blank';
-                link.className = 'text-lg font-medium block w-full';
+                link.className = 'text-lg font-medium block';
 
                 // Tô sáng tiêu đề
                 let highlightedTitle = article.title;
@@ -230,27 +241,59 @@
                     highlightedTitle = highlightedTitle.replace(highlightRegex, `<span class="highlight">$1</span>`);
                 }
                 link.innerHTML = highlightedTitle;
+                linkContainer.appendChild(link);
 
-                // --- CẬP NHẬT QUAN TRỌNG ---
-                // Hiển thị đoạn trích nội dung và TỰ TÔ SÁNG TỪ KHÓA trên frontend.
-                // Để hiển thị nhiều nội dung hơn, bạn cần đảm bảo API trả về nhiều text hơn trong trường 'content_snippet'.
-                if (article.content_snippet) { 
-                    const contentSnippet = document.createElement('p');
-                    contentSnippet.className = 'text-sm text-gray-600 mt-1';
+
+                // --- CẬP NHẬT QUAN TRỌNG: Logic tạo snippet động ---
+                // YÊU CẦU: API cần trả về trường 'content' chứa toàn bộ nội dung bài viết
+                // để chức năng này hoạt động chính xác.
+                if (article.content) { 
+                    const contentP = document.createElement('p');
+                    contentP.className = 'text-sm text-gray-600 mt-1';
                     
-                    let highlightedContent = article.content_snippet;
-                    // Áp dụng tô sáng cho nội dung nếu có từ khóa tìm kiếm
+                    let snippet = '';
+                    const snippetLength = 250; // Độ dài của đoạn trích
+
+                    if (searchTerm) {
+                        // Cố gắng tìm vị trí của toàn bộ cụm từ tìm kiếm
+                        const termIndex = article.content.toLowerCase().indexOf(searchTerm.toLowerCase());
+                        let matchIndex = -1;
+
+                        if (termIndex > -1) {
+                            matchIndex = termIndex;
+                        } else if (highlightWords.length > 0) {
+                            // Nếu không thấy, tìm vị trí của từ đơn lẻ đầu tiên
+                            const firstWordRegex = new RegExp(highlightWords[0], 'i');
+                            const firstWordMatch = article.content.match(firstWordRegex);
+                            if (firstWordMatch) {
+                                matchIndex = firstWordMatch.index;
+                            }
+                        }
+                        
+                        if (matchIndex > -1) {
+                            const start = Math.max(0, matchIndex - 70); // Lùi lại 1 chút
+                            const rawSnippet = article.content.substring(start, start + snippetLength);
+                            snippet = (start > 0 ? '...' : '') + rawSnippet + (start + snippetLength < article.content.length ? '...' : '');
+                        } else {
+                            // Fallback: nếu không tìm thấy từ khóa nào trong nội dung, chỉ lấy đoạn đầu
+                            snippet = article.content.substring(0, snippetLength) + (article.content.length > snippetLength ? '...' : '');
+                        }
+                    } else {
+                        // Fallback cho bài viết gợi ý (không có từ khóa tìm kiếm)
+                        snippet = article.content.substring(0, snippetLength) + (article.content.length > snippetLength ? '...' : '');
+                    }
+
+                    // Luôn áp dụng tô sáng cho snippet đã tạo
                     if (highlightRegex) {
-                        highlightedContent = highlightedContent.replace(highlightRegex, `<span class="highlight">$1</span>`);
+                        snippet = snippet.replace(highlightRegex, `<span class="highlight">$1</span>`);
                     }
                     
-                    // Hiển thị nội dung đã được tô sáng
-                    contentSnippet.innerHTML = `...${highlightedContent}...`; 
-                    link.appendChild(contentSnippet);
+                    contentP.innerHTML = snippet;
+                    linkContainer.appendChild(contentP);
                 }
 
                 listItem.appendChild(iconSpan);
-                listItem.appendChild(link);
+                listItem.appendChild(linkContainer);
                 articlesUl.appendChild(listItem);
             });
         }
@@ -292,3 +335,4 @@
     </script>
 </body>
 </html>
+�
