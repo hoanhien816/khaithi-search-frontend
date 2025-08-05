@@ -1,7 +1,7 @@
 {
-    "name": "Trợ Lý Tìm Khai Thị",
-    "short_name": "Tìm Khai Thị",
-    "description": "Ứng dụng tìm kiếm các bài viết khai thị.",
+    "name": "Bách Khoa",
+    "short_name": "Bách Khoa",
+    "description": "Ứng dụng tra cứu Pháp Môn Tâm Linh",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#f5f3f0",
