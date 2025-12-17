@@ -3,14 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pháp Môn Tâm Linh 心靈法門</title>
+    <title>Tìm Khai Thị</title>
     <meta name="description" content="Pháp Môn Tâm Linh 心靈法門.">
-    <!-- PWA: Link to Manifest File -->
-    <link rel="manifest" href="manifest.json">
-
-    <!-- PWA: Theme Color for Address Bar -->
-    <meta name="theme-color" content="#f5f3f0">
-
     <!-- Google Font: Noto Serif for a more traditional feel -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -335,17 +329,6 @@
             // Gọi API với chuỗi rỗng để backend hiểu là cần lấy bài viết gợi ý
             fetchArticlesFromAPI(''); 
         });
-    </script>
-
-    <!-- PWA: Register Service Worker -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => console.log('Service Worker đã đăng ký thành công:', registration))
-                    .catch(error => console.log('Đăng ký Service Worker thất bại:', error));
-            });
-        }
     </script>
 </body>
 </html>
